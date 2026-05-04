@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Minhas Tarefas — TaskFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.2rem 1.5rem; }
+  .stat-value { font-size: 2rem; font-weight: 700; letter-spacing: -1px; }
+  .stat-label { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .5px; }
+
+  .priority-badge {
+    font-size: .72rem; font-weight: 600; padding: .25rem .6rem; border-radius: 20px; text-transform: uppercase; letter-spacing: .4px;
+  }
+  .priority-alta   { background: #7f1d1d33; color: #f87171; }
+  .priority-media  { background: #78350f33; color: #fbbf24; }
+  .priority-baixa  { background: #14532d33; color: #4ade80; }
+
+  .task-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: .75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    transition: border-color .2s;
+  }
+  .task-item:hover { border-color: var(--primary); }
+  .task-item.completed { opacity: .5; }
+  .task-item.completed .task-title { text-decoration: line-through; }
+
+  .task-title { font-weight: 600; font-size: .95rem; }
+  .task-desc { color: var(--muted); font-size: .85rem; margin-top: .25rem; }
+  .task-meta { color: var(--muted); font-size: .75rem; margin-top: .4rem; }
+
+  .task-actions { display: flex; gap: .5rem; margin-left: auto; align-items: center; }
+
+  .btn-icon {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 8px; padding: .35rem .6rem; font-size: .8rem; cursor: pointer; transition: all .2s;
+  }
+  .btn-icon:hover { color: var(--text); border-color: var(--muted); }
+  .btn-icon.danger:hover { color: #f87171; border-color: #f87171; background: #7f1d1d22; }
+  .btn-icon.success:hover { color: #4ade80; border-color: #4ade80; background: #14532d22; }
+
+  .add-form { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem; }
+
+  .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .filter-btn {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 20px; padding: .35rem .85rem; font-size: .82rem; font-weight: 500;
+    cursor: pointer; text-decoration: none; transition: all .2s;
+  }
+  .filter-btn:hover, .filter-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  .empty-state { text-align: center; padding: 3rem; color: var(--muted); }
+  .empty-state i { font-size: 3rem; margin-bottom: 1rem; display: block; }
+
+  @media (max-width: 576px) {
+    .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    .stat-value { font-size: 1.4rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold" style="letter-spacing:-1px">Minhas Tarefas</h2>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value">{{ total }}</div>
+    <div class="stat-label">Total</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--warning)">{{ pending }}</div>
+    <div class="stat-label">Pendentes</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:#4ade80">{{ done }}</div>
+    <div class="stat-label">Concluídas</div>
+  </div>
+</div>
+
+<!-- Add Task Form -->
+<div class="add-form">
+  <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle me-2" style="color:var(--primary)"></i>Nova Tarefa</h6>
+  <form method="POST" action="{{ url_for('main.new_task') }}">
+    <div class="row g-2">
+      <div class="col-12 col-md-5">
+        <input type="text" name="title" class="form-control" placeholder="Título da tarefa..." required />
+      </div>
+      <div class="col-12 col-md-4">
+        <input type="text" name="description" class="form-control" placeholder="Descrição (opcional)" />
+      </div>
+      <div class="col-6 col-md-2">
+        <select name="priority" class="form-select">
+          <option value="baixa">🟢 Baixa</option>
+          <option value="media" selected>🟡 Média</option>
+          <option value="alta">🔴 Alta</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-1">
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg"></i></button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar">
+  <a href="{{ url_for('main.tasks') }}" class="filter-btn {% if filter_status == 'all' and filter_priority == 'all' %}active{% endif %}">Todas</a>
+  <a href="{{ url_for('main.tasks', status='pending') }}" class="filter-btn {% if filter_status == 'pending' %}active{% endif %}">Pendentes</a>
+  <a href="{{ url_for('main.tasks', status='done') }}" class="filter-btn {% if filter_status == 'done' %}active{% endif %}">Concluídas</a>
+  <span class="text-muted small align-self-center mx-1">|</span>
+  <a href="{{ url_for('main.tasks', priority='alta') }}" class="filter-btn {% if filter_priority == 'alta' %}active{% endif %}">🔴 Alta</a>
+  <a href="{{ url_for('main.tasks', priority='media') }}" class="filter-btn {% if filter_priority == 'media' %}active{% endif %}">🟡 Média</a>
+  <a href="{{ url_for('main.tasks', priority='baixa') }}" class="filter-btn {% if filter_priority == 'baixa' %}active{% endif %}">🟢 Baixa</a>
+</div>
+
+<!-- Task List -->
+{% if tasks %}
+  {% for task in tasks %}
+  <div class="task-item {% if task.completed %}completed{% endif %}">
+    <form method="POST" action="{{ url_for('main.toggle_task', task_id=task.id) }}" class="d-flex align-items-start pt-1">
+      <button type="submit" class="btn-icon {% if task.completed %}success{% endif %}" title="Marcar/desmarcar">
+        <i class="bi {% if task.completed %}bi-check-circle-fill{% else %}bi-circle{% endif %}"></i>
+      </button>
+    </form>
+
+    <div class="flex-grow-1">
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="task-title">{{ task.title }}</span>
+        <span class="priority-badge priority-{{ task.priority }}">{{ task.priority }}</span>
+      </div>
+      {% if task.description %}
+        <div class="task-desc">{{ task.description }}</div>
+      {% endif %}
+      <div class="task-meta">
+        <i class="bi bi-clock me-1"></i>{{ task.created_at.strftime('%d/%m/%Y às %H:%M') }}
+      </div>
+    </div>
+
+    <div class="task-actions">
+      <a href="{{ url_for('main.edit_task', task_id=task.id) }}" class="btn-icon" title="Editar">
+        <i class="bi bi-pencil"></i>
+      </a>
+      <form method="POST" action="{{ url_for('main.delete_task', task_id=task.id) }}"
+            onsubmit="return confirm('Remover esta tarefa?')">
+        <button type="submit" class="btn-icon danger" title="Excluir">
+          <i class="bi bi-trash"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="empty-state">
+    <i class="bi bi-inbox"></i>
+    <p class="fw-600">Nenhuma tarefa encontrada</p>
+    <p class="small">Crie sua primeira tarefa acima!</p>
+  </div>
+{% endif %}
+{% endblock %}

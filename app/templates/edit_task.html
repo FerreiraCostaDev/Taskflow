@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Editar Tarefa — TaskFlow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Voltar
+      </a>
+      <h4 class="fw-bold mb-0">Editar Tarefa</h4>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('main.edit_task', task_id=task.id) }}">
+          <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input type="text" name="title" class="form-control" value="{{ task.title }}" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descrição</label>
+            <textarea name="description" class="form-control" rows="3" placeholder="Descrição opcional...">{{ task.description or '' }}</textarea>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Prioridade</label>
+            <select name="priority" class="form-select">
+              <option value="baixa" {% if task.priority == 'baixa' %}selected{% endif %}>🟢 Baixa</option>
+              <option value="media" {% if task.priority == 'media' %}selected{% endif %}>🟡 Média</option>
+              <option value="alta" {% if task.priority == 'alta' %}selected{% endif %}>🔴 Alta</option>
+            </select>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1">Salvar alterações</button>
+            <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
