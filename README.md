@@ -104,7 +104,7 @@ taskflow/
 
 Feito por **José** — estudante de Análise e Desenvolvimento de Sistemas na Faculdade Ficr PE.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)(https:www.linkedin.com/in/ferreiracostadev)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://linkedin.com/in/seu-usuario)
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/seu-usuario)
 
 ---
